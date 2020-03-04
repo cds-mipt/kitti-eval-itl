@@ -1,6 +1,5 @@
-Устрановка
+Установка
 ==========
-Инструкция по установке оригинального кода - https://docs.google.com/document/d/1yTAwopheMraBgP9keqNODIOkiUDAPYALBDGLR0rPrPM/edit.<br/>
 
 Установка зависимостей:
 ```sh
@@ -18,5 +17,13 @@ g++ -O3 -DNDEBUG -o evaluate_odometry evaluate_odometry.cpp matrix.cpp
 ```sh
 ./evaluate_odometry results/
 ```
-Результаты валидации будут лежать в *results/resutls.txt*.
+Результаты валидации в формате Kitti Benchmark Odometry Leaderboard будут лежать в *results/resutls.txt*, 
+результат по каждой из последовательности + среднее по всем  - translation error (в %) и rotation error (deg/m).
 
+В папке results/plot_error содержатся графики ошибок по разным расстояниям.
+В папке results/plot_path содержатся графики получившихся траекторий в сравнении с ground truth.
+
+
+В файле *results/stats.txt* содержится оригинальный вывод Kitti Benchmark devkit: первое число - translation error (условные единицы в диапазоне от 0 до 1 (нужно домножать на 100%)), второе число - rotation error (rad/m).
+
+Инструкция по установке оригинального кода - https://docs.google.com/document/d/1yTAwopheMraBgP9keqNODIOkiUDAPYALBDGLR0rPrPM/edit.<br/>
