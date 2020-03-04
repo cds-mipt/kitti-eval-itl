@@ -17,5 +17,5 @@ g++ -O3 -DNDEBUG -o evaluate_odometry evaluate_odometry.cpp matrix.cpp
 ```sh
 ./evaluate_odometry results/
 ```
-Результаты валидации по каждной из последовательностей будут лежать в *results/resutls.txt*, результат по всем последовательностям - в *results/stats.txt*. В файле *results/stats.txt* первое число - translation error (в диапозоне от 0 до 1), второе число - rotation error (rad/m).
+Результаты валидации будут лежать в *results/resutls.txt*.
 

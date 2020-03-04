@@ -423,13 +423,24 @@ void getStats (vector<errors> err,float& _t_err,float& _r_err) {
   _r_err = r_err/num;
 }
 
-void saveResults(float seq_t_err[],float seq_r_err[],int seq_nums[],int seq_nums_end,string dir) {
+void saveResults(float seq_t_err[],float seq_r_err[],vector<errors> total_err,int seq_nums[],int seq_nums_end,string dir) {
   int i;
   FILE *fp = fopen((dir + "/results.txt").c_str(),"w");
   fprintf(fp, "translation_error(%) rotation_error(deg/m)\n");
   for (i = 0; i < seq_nums_end; i++) {
     fprintf(fp,"%2d: %f %f\n",seq_nums[i],seq_t_err[i]*100,seq_r_err[i]/M_PI*180);
   }
+  fprintf(fp,"\n");
+
+  float t_err = 0;
+  float r_err = 0;
+  for (vector<errors>::iterator it=total_err.begin(); it!=total_err.end(); it++) {
+    t_err += it->t_err;
+    r_err += it->r_err;
+  }
+  float num = total_err.size();
+  fprintf(fp,"In total: %f %f\n",t_err/num*100,r_err/num/M_PI*180);
+
   fclose(fp);
 }
 
@@ -514,7 +525,7 @@ bool eval (string result_sha,Mail* mail) {
     saveErrorPlots(total_err,plot_error_dir,prefix);
     plotErrorPlots(plot_error_dir,prefix);
     saveStats(total_err,result_dir);
-    saveResults(seq_t_err,seq_r_err,seq_nums,seq_nums_ptr,result_dir);
+    saveResults(seq_t_err,seq_r_err,total_err,seq_nums,seq_nums_ptr,result_dir);
   }
 
   // success
