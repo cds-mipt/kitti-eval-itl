@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#define M_PI 3.14159265358979323846
+
 // static parameter
 // float lengths[] = {5,10,50,100,150,200,250,300,350,400};
 float lengths[] = {100,200,300,400,500,600,700,800};
@@ -424,9 +426,9 @@ void getStats (vector<errors> err,float& _t_err,float& _r_err) {
 void saveResults(float seq_t_err[],float seq_r_err[],int seq_nums[],int seq_nums_end,string dir) {
   int i;
   FILE *fp = fopen((dir + "/results.txt").c_str(),"w");
-  fprintf(fp, "translation_error rotation_error\n");
+  fprintf(fp, "translation_error(%) rotation_error(deg/m)\n");
   for (i = 0; i < seq_nums_end; i++) {
-    fprintf(fp,"%2d: %f %f\n",seq_nums[i],seq_t_err[i],seq_r_err[i]);
+    fprintf(fp,"%2d: %f %f\n",seq_nums[i],seq_t_err[i]*100,seq_r_err[i]/M_PI*180);
   }
   fclose(fp);
 }
