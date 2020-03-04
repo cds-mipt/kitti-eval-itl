@@ -1,6 +1,7 @@
 Устрановка
 ==========
 Инструкция по установке оригинального кода - https://docs.google.com/document/d/1yTAwopheMraBgP9keqNODIOkiUDAPYALBDGLR0rPrPM/edit.<br/>
+
 Установка зависимостей:
 ```sh
 sudo apt-get install texlive-extra-utils
