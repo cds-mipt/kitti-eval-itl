@@ -12,8 +12,9 @@ using namespace std;
 #define M_PI 3.14159265358979323846
 
 // static parameter
-// float lengths[] = {5,10,50,100,150,200,250,300,350,400};
-float lengths[] = {100,200,300,400,500,600,700,800};
+// float lengths[] = {5,10,50,100,150,200,250,300,350,400};  // old kitti
+// float lengths[] = {100,200,300,400,500,600,700,800};  // kitti
+float lengths[] = {5,10,25,50,75,100,150,200};  // husky
 int32_t num_lengths = 8;
 
 struct errors {
