@@ -12,10 +12,12 @@ using namespace std;
 #define M_PI 3.14159265358979323846
 
 // static parameter
-// float lengths[] = {5,10,50,100,150,200,250,300,350,400};  // old kitti
-// float lengths[] = {100,200,300,400,500,600,700,800};  // kitti
-float lengths[] = {5,10,25,50,75,100,150,200};  // husky
-int32_t num_lengths = 8;
+// float lengths[] = ;
+float all_sets_of_lengths[][10] = {{100,200,300,400,500,600,700,800,0,0},
+                                  {5,10,50,100,150,200,250,300,350,400}};
+int32_t num_lengths_of_all_sets[] = {8,10};
+float *lengths;
+int32_t num_lengths = -1;
 
 struct errors {
   int32_t first_frame;
@@ -536,23 +538,36 @@ bool eval (string result_sha,Mail* mail) {
 int32_t main (int32_t argc,char *argv[]) {
 
   // we need 2 or 4 arguments!
-  if (argc!=2 && argc!=4) {
-    cout << "Usage: ./eval_odometry result_sha [user_sha email]" << endl;
+  if (argc!=3 && argc!=5) {
+    cout << "Usage: ./eval_odometry result_sha lengths_set_idx [user_sha email]" << endl;
     return 1;
   }
 
   // read arguments
   string result_sha = argv[1];
+  int lengths_set_idx = atoi(argv[2]);
+  if (lengths_set_idx >= 2){
+    cout << "lengths_set_idx must be 0 or 1" << endl;
+    return 1;
+  }
+  lengths = all_sets_of_lengths[lengths_set_idx];
+  num_lengths = num_lengths_of_all_sets[lengths_set_idx];
+  cout << "Used lengths:" << endl;
+  int i = 0;
+  for (i = 0; i < num_lengths; i++){
+    printf("%.2f ", lengths[i]);
+  }
+  cout << endl;
 
   // init notification mail
   Mail *mail;
-  if (argc==4) mail = new Mail(argv[3]);
+  if (argc==5) mail = new Mail(argv[4]);
   else         mail = new Mail();
   mail->msg("Thank you for participating in our evaluation!");
 
   // run evaluation
   bool success = eval(result_sha,mail);
-  // if (argc==4) mail->finalize(success,"odometry",result_sha,argv[2]);
+  // if (argc==5) mail->finalize(success,"odometry",result_sha,argv[3]);
   // else         mail->finalize(success,"odometry",result_sha);
 
   // send mail and exit
