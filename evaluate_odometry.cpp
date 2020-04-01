@@ -13,6 +13,7 @@ using namespace std;
 
 // static parameter
 // float lengths[] = ;
+int sets_of_lengths_num = 2;
 float all_sets_of_lengths[][10] = {{100,200,300,400,500,600,700,800,0,0},
                                   {5,10,50,100,150,200,250,300,350,400}};
 int32_t num_lengths_of_all_sets[] = {8,10};
@@ -535,27 +536,46 @@ bool eval (string result_sha,Mail* mail) {
 	return true;
 }
 
+void print_help() {
+  cout << "Usage: ./evaluate_odometry result_sha lengths_set=[0, 1] [user_sha email]" << endl;
+  int i;
+  cout << "lengths_set:" << endl;
+  for (i = 0; i < sets_of_lengths_num; i++) {
+    cout << "  " << i << ": {";
+    lengths = all_sets_of_lengths[i];
+    num_lengths = num_lengths_of_all_sets[i];
+    int j;
+    for (j = 0; j < num_lengths; j++) {
+      printf("%.1f", lengths[j]);
+      if (j != num_lengths-1) {
+        cout << ", ";
+      }
+    }
+    cout << "}" << endl;
+  }
+}
+
 int32_t main (int32_t argc,char *argv[]) {
 
   // we need 2 or 4 arguments!
   if (argc!=3 && argc!=5) {
-    cout << "Usage: ./eval_odometry result_sha lengths_set_idx [user_sha email]" << endl;
+    print_help();
     return 1;
   }
 
   // read arguments
   string result_sha = argv[1];
-  int lengths_set_idx = atoi(argv[2]);
-  if (lengths_set_idx >= 2){
-    cout << "lengths_set_idx must be 0 or 1" << endl;
+  int lengths_set = atoi(argv[2]);
+  if (lengths_set >= 2){
+    cout << "lengths_set must be 0 or 1" << endl;
     return 1;
   }
-  lengths = all_sets_of_lengths[lengths_set_idx];
-  num_lengths = num_lengths_of_all_sets[lengths_set_idx];
-  cout << "Used lengths:" << endl;
+  lengths = all_sets_of_lengths[lengths_set];
+  num_lengths = num_lengths_of_all_sets[lengths_set];
+  cout << "Used lengths:" << endl << "  ";
   int i = 0;
   for (i = 0; i < num_lengths; i++){
-    printf("%.2f ", lengths[i]);
+    printf("%.1f ", lengths[i]);
   }
   cout << endl;
 
