@@ -3,6 +3,7 @@
 #include <math.h>
 #include <vector>
 #include <limits>
+#include <string.h>
 
 #include "mail.h"
 #include "matrix.h"
@@ -19,6 +20,10 @@ float all_sets_of_lengths[][10] = {{100,200,300,400,500,600,700,800,0,0},
 int32_t num_lengths_of_all_sets[] = {8,10};
 float *lengths;
 int32_t num_lengths = -1;
+
+int coord_1_idx = -1, coord_2_idx = -1;
+char *axis_names[] = {"x", "y", "z"};
+int view = -1;
 
 struct errors {
   int32_t first_frame;
@@ -155,49 +160,49 @@ void savePathPlot (vector<Matrix> &poses_gt,vector<Matrix> &poses_result,string 
  
   // save x/z coordinates of all frames to file
   for (int32_t i=0; i<poses_gt.size(); i+=step_size)
-    fprintf(fp,"%f %f %f %f\n",poses_gt[i].val[0][3],poses_gt[i].val[2][3],
-                               poses_result[i].val[0][3],poses_result[i].val[2][3]);
+    fprintf(fp,"%f %f %f %f %f %f\n",poses_gt[i].val[0][3],poses_gt[i].val[1][3],poses_gt[i].val[2][3],
+                                     poses_result[i].val[0][3],poses_result[i].val[1][3],poses_result[i].val[2][3]);
   
   // close file
   fclose(fp);
 }
 
-vector<int32_t> computeRoi (vector<Matrix> &poses_gt,vector<Matrix> &poses_result) {
+vector<float> computeRoi (vector<Matrix> &poses_gt,vector<Matrix> &poses_result) {
   
-  float x_min = numeric_limits<int32_t>::max();
-  float x_max = numeric_limits<int32_t>::min();
-  float z_min = numeric_limits<int32_t>::max();
-  float z_max = numeric_limits<int32_t>::min();
+  float coord_1_min = numeric_limits<int32_t>::max();
+  float coord_1_max = numeric_limits<int32_t>::min();
+  float coord_2_min = numeric_limits<int32_t>::max();
+  float coord_2_max = numeric_limits<int32_t>::min();
   
   for (vector<Matrix>::iterator it=poses_gt.begin(); it!=poses_gt.end(); it++) {
-    float x = it->val[0][3];
-    float z = it->val[2][3];
-    if (x<x_min) x_min = x; if (x>x_max) x_max = x;
-    if (z<z_min) z_min = z; if (z>z_max) z_max = z;
+    float coord_1 = it->val[coord_1_idx][3];
+    float coord_2 = it->val[coord_2_idx][3];
+    if (coord_1<coord_1_min) coord_1_min = coord_1; if (coord_1>coord_1_max) coord_1_max = coord_1;
+    if (coord_2<coord_2_min) coord_2_min = coord_2; if (coord_2>coord_2_max) coord_2_max = coord_2;
   }
   
   for (vector<Matrix>::iterator it=poses_result.begin(); it!=poses_result.end(); it++) {
-    float x = it->val[0][3];
-    float z = it->val[2][3];
-    if (x<x_min) x_min = x; if (x>x_max) x_max = x;
-    if (z<z_min) z_min = z; if (z>z_max) z_max = z;
+    float coord_1 = it->val[coord_1_idx][3];
+    float coord_2 = it->val[coord_2_idx][3];
+    if (coord_1<coord_1_min) coord_1_min = coord_1; if (coord_1>coord_1_max) coord_1_max = coord_1;
+    if (coord_2<coord_2_min) coord_2_min = coord_2; if (coord_2>coord_2_max) coord_2_max = coord_2;
   }
   
-  float dx = 1.1*(x_max-x_min);
-  float dz = 1.1*(z_max-z_min);
-  float mx = 0.5*(x_max+x_min);
-  float mz = 0.5*(z_max+z_min);
-  float r  = 0.5*max(dx,dz);
+  float dcoord_1 = 1.1*(coord_1_max-coord_1_min);
+  float dcoord_2 = 1.1*(coord_2_max-coord_2_min);
+  float mcoord_1 = 0.5*(coord_1_max+coord_1_min);
+  float mcoord_2 = 0.5*(coord_2_max+coord_2_min);
+  float r  = 0.5*max(dcoord_1,dcoord_2);
   
-  vector<int32_t> roi;
-  roi.push_back((int32_t)(mx-r));
-  roi.push_back((int32_t)(mx+r));
-  roi.push_back((int32_t)(mz-r));
-  roi.push_back((int32_t)(mz+r));
+  vector<float> roi;
+  roi.push_back(mcoord_1-r);
+  roi.push_back(mcoord_1+r);
+  roi.push_back(mcoord_2-r);
+  roi.push_back(mcoord_2+r);
   return roi;
 }
 
-void plotPathPlot (string dir,vector<int32_t> &roi,int32_t idx) {
+void plotPathPlot (string dir,vector<float> &roi,int32_t idx) {
 
   // gnuplot file name
   char command[1024];
@@ -221,13 +226,13 @@ void plotPathPlot (string dir,vector<int32_t> &roi,int32_t idx) {
     }
 
     fprintf(fp,"set size ratio -1\n");
-    fprintf(fp,"set xrange [%d:%d]\n",roi[0],roi[1]);
-    fprintf(fp,"set yrange [%d:%d]\n",roi[2],roi[3]);
-    fprintf(fp,"set xlabel \"x [m]\"\n");
-    fprintf(fp,"set ylabel \"z [m]\"\n");
-    fprintf(fp,"plot \"%02d.txt\" using 1:2 lc rgb \"#FF0000\" title 'Ground Truth' w lines,",idx);
-    fprintf(fp,"\"%02d.txt\" using 3:4 lc rgb \"#0000FF\" title 'Visual Odometry' w lines,",idx);
-    fprintf(fp,"\"< head -1 %02d.txt\" using 1:2 lc rgb \"#000000\" pt 4 ps 1 lw 2 title 'Sequence Start' w points\n",idx);
+    fprintf(fp,"set xrange [%f:%f]\n",roi[0],roi[1]);
+    fprintf(fp,"set yrange [%f:%f]\n",roi[2],roi[3]);
+    fprintf(fp,"set xlabel \"%s [m]\"\n", axis_names[coord_1_idx]);
+    fprintf(fp,"set ylabel \"%s [m]\"\n", axis_names[coord_2_idx]);
+    fprintf(fp,"plot \"%02d.txt\" using %d:%d lc rgb \"#FF0000\" title 'Ground Truth' w lines,",idx,coord_1_idx+1,coord_2_idx+1);
+    fprintf(fp,"\"%02d.txt\" using %d:%d lc rgb \"#0000FF\" title 'Visual Odometry' w lines,",idx,coord_1_idx+1+3,coord_2_idx+1+3);
+    fprintf(fp,"\"< head -1 %02d.txt\" using %d:%d lc rgb \"#000000\" pt 4 ps 1 lw 2 title 'Sequence Start' w points\n",idx,coord_1_idx+1,coord_2_idx+1);
     
     // close file
     fclose(fp);
@@ -505,12 +510,12 @@ bool eval (string result_sha,Mail* mail) {
     // add to total errors
     total_err.insert(total_err.end(),seq_err.begin(),seq_err.end());
     
-    // for first half => plot trajectory and compute individual stats
+    // for all => plot trajectory and compute individual stats
     if ((i<=15) or true) {
     
       // save + plot bird's eye view trajectories
       savePathPlot(poses_gt,poses_result,plot_path_dir + "/" + file_name);
-      vector<int32_t> roi = computeRoi(poses_gt,poses_result);
+      vector<float> roi = computeRoi(poses_gt,poses_result);
       plotPathPlot(plot_path_dir,roi,i);
 
       // save + plot individual errors
@@ -537,7 +542,7 @@ bool eval (string result_sha,Mail* mail) {
 }
 
 void print_help() {
-  cout << "Usage: ./evaluate_odometry result_sha lengths_set=[0, 1] [user_sha email]" << endl;
+  cout << "Usage: ./evaluate_odometry results_folder lengths_set=[0, 1] view=[top, side] [user_sha email]" << endl;
   int i;
   cout << "lengths_set:" << endl;
   for (i = 0; i < sets_of_lengths_num; i++) {
@@ -558,7 +563,7 @@ void print_help() {
 int32_t main (int32_t argc,char *argv[]) {
 
   // we need 2 or 4 arguments!
-  if (argc!=3 && argc!=5) {
+  if (argc!=4 && argc!=6) {
     print_help();
     return 1;
   }
@@ -566,7 +571,7 @@ int32_t main (int32_t argc,char *argv[]) {
   // read arguments
   string result_sha = argv[1];
   int lengths_set = atoi(argv[2]);
-  if (lengths_set >= 2){
+  if ((lengths_set >= 2) or (lengths_set < 0)){
     cout << "lengths_set must be 0 or 1" << endl;
     return 1;
   }
@@ -579,15 +584,29 @@ int32_t main (int32_t argc,char *argv[]) {
   }
   cout << endl;
 
+  if (strcmp(argv[3], "top") == 0) {
+    coord_1_idx = 0; //x
+    coord_2_idx = 2; //z
+    view = 0;
+  } else if (strcmp(argv[3], "side") == 0) {
+    coord_1_idx = 0; //x
+    coord_2_idx = 1; //y
+    view = 1;
+  } else {
+    cout << "view must be top or side" << endl;
+    return 1;
+  }
+  cout << "Used view:" << endl << "  " << argv[3] << endl;
+
   // init notification mail
   Mail *mail;
-  if (argc==5) mail = new Mail(argv[4]);
+  if (argc==5) mail = new Mail(argv[5]);
   else         mail = new Mail();
   mail->msg("Thank you for participating in our evaluation!");
 
   // run evaluation
   bool success = eval(result_sha,mail);
-  // if (argc==5) mail->finalize(success,"odometry",result_sha,argv[3]);
+  // if (argc==5) mail->finalize(success,"odometry",result_sha,argv[4]);
   // else         mail->finalize(success,"odometry",result_sha);
 
   // send mail and exit
