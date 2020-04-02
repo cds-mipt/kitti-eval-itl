@@ -15,9 +15,9 @@ using namespace std;
 // static parameter
 // float lengths[] = ;
 int sets_of_lengths_num = 2;
-float all_sets_of_lengths[][10] = {{100,200,300,400,500,600,700,800,0,0},
-                                  {5,10,50,100,150,200,250,300,350,400}};
-int32_t num_lengths_of_all_sets[] = {8,10};
+float all_sets_of_lengths[][10] = {{100,200,300,400,500,600,700,800},
+                                  {5,10,25,50,75,100,150,200}};
+int32_t num_lengths_of_all_sets[] = {8,8};
 float *lengths;
 int32_t num_lengths = -1;
 
@@ -542,7 +542,7 @@ bool eval (string result_sha,Mail* mail) {
 }
 
 void print_help() {
-  cout << "Usage: ./evaluate_odometry results_folder lengths_set=[0, 1] view=[top, side] [user_sha email]" << endl;
+  cout << "Usage: ./evaluate_odometry results_folder lengths_set=[0, 1] view=[x/z, x/y] [user_sha email]" << endl;
   int i;
   cout << "lengths_set:" << endl;
   for (i = 0; i < sets_of_lengths_num; i++) {
@@ -558,6 +558,10 @@ void print_help() {
     }
     cout << "}" << endl;
   }
+
+  cout << "view:" << endl;
+  cout << "  x/z - top view" << endl;
+  cout << "  x/y - side view" << endl;
 }
 
 int32_t main (int32_t argc,char *argv[]) {
@@ -584,11 +588,11 @@ int32_t main (int32_t argc,char *argv[]) {
   }
   cout << endl;
 
-  if (strcmp(argv[3], "top") == 0) {
+  if (strcmp(argv[3], "x/z") == 0) {
     coord_1_idx = 0; //x
     coord_2_idx = 2; //z
     view = 0;
-  } else if (strcmp(argv[3], "side") == 0) {
+  } else if (strcmp(argv[3], "x/y") == 0) {
     coord_1_idx = 0; //x
     coord_2_idx = 1; //y
     view = 1;
