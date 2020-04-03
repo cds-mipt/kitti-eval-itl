@@ -136,6 +136,21 @@ vector<errors> calcSequenceErrors (vector<Matrix> &poses_gt,vector<Matrix> &pose
   return err;
 }
 
+float calcAbsoluteTranslationError(vector<Matrix> &poses_gt, vector<Matrix> &poses_result) {
+  float sum_of_squares = 0;
+  for (int32_t frame=0; frame<poses_gt.size(); frame+=1) {
+    Matrix pose_gt = Matrix::inv(poses_gt[0])*poses_gt[frame];
+    Matrix pose_result = Matrix::inv(poses_result[0])*poses_result[frame];
+
+    float x_gt=pose_gt.val[0][3], y_gt=pose_gt.val[1][3], z_gt=pose_gt.val[2][3];
+    float x_result=pose_result.val[0][3], y_result=pose_result.val[1][3], z_result=pose_result.val[2][3];
+
+    float dx=x_gt-x_result, dy=y_gt-y_result, dz=z_gt-z_result;
+    sum_of_squares += dx*dx + dy*dy + dz*dz;
+  }
+  return sqrt(sum_of_squares / poses_gt.size());
+}
+
 void saveSequenceErrors (vector<errors> &err,string file_name) {
 
   // open file  
@@ -432,12 +447,12 @@ void getStats (vector<errors> err,float& _t_err,float& _r_err) {
   _r_err = r_err/num;
 }
 
-void saveResults(float seq_t_err[],float seq_r_err[],vector<errors> total_err,int seq_nums[],int seq_nums_end,string dir) {
+void saveResults(float seq_t_err[],float seq_r_err[],float seq_ate[],vector<errors> total_err,int seq_nums[],int seq_nums_end,string dir) {
   int i;
   FILE *fp = fopen((dir + "/results.txt").c_str(),"w");
-  fprintf(fp, "translation_error(%) rotation_error(deg/m)\n");
+  fprintf(fp, "translation_error(%) rotation_error(deg/m) ATE(m)\n");
   for (i = 0; i < seq_nums_end; i++) {
-    fprintf(fp,"%2d: %f %f\n",seq_nums[i],seq_t_err[i]*100,seq_r_err[i]/M_PI*180);
+    fprintf(fp,"%2d: %f %f %f\n",seq_nums[i],seq_t_err[i]*100,seq_r_err[i]/M_PI*180, seq_ate[i]);
   }
   fprintf(fp,"\n");
 
@@ -472,6 +487,7 @@ bool eval (string result_sha,Mail* mail) {
 
   float seq_t_err[22];
   float seq_r_err[22];
+  float seq_ate[22];
   int seq_nums[22];
   int seq_nums_ptr = 0;
 
@@ -506,6 +522,9 @@ bool eval (string result_sha,Mail* mail) {
     saveSequenceErrors(seq_err,error_dir + "/" + file_name);
     getStats(seq_err,seq_t_err[seq_nums_ptr],seq_r_err[seq_nums_ptr]);
     seq_nums[seq_nums_ptr] = i;
+
+    // compute trajectory errors
+    seq_ate[seq_nums_ptr] = calcAbsoluteTranslationError(poses_gt, poses_result);
     
     // add to total errors
     total_err.insert(total_err.end(),seq_err.begin(),seq_err.end());
@@ -534,7 +553,7 @@ bool eval (string result_sha,Mail* mail) {
     saveErrorPlots(total_err,plot_error_dir,prefix);
     plotErrorPlots(plot_error_dir,prefix);
     saveStats(total_err,result_dir);
-    saveResults(seq_t_err,seq_r_err,total_err,seq_nums,seq_nums_ptr,result_dir);
+    saveResults(seq_t_err,seq_r_err,seq_ate,total_err,seq_nums,seq_nums_ptr,result_dir);
   }
 
   // success
