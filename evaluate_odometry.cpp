@@ -458,6 +458,14 @@ void saveResults(float seq_t_err[],float seq_r_err[],float seq_ate[],vector<erro
 
   float t_err = 0;
   float r_err = 0;
+  for (i = 0; i < seq_nums_end; i++) {
+    t_err += seq_t_err[i];
+    r_err += seq_r_err[i];
+  }
+  fprintf(fp,"Mean errors: %f %f\n",t_err/seq_nums_end*100,r_err/seq_nums_end/M_PI*180);
+
+  t_err = 0;
+  r_err = 0;
   for (vector<errors>::iterator it=total_err.begin(); it!=total_err.end(); it++) {
     t_err += it->t_err;
     r_err += it->r_err;
